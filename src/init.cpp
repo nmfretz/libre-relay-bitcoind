@@ -836,7 +836,7 @@ namespace { // Variables internal to initialization process only
 int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
-ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS | NODE_LIBRE_RELAY);
 int64_t peer_connect_timeout;
 std::set<BlockFilterType> g_enabled_filter_types;
 
@@ -1540,6 +1540,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
+    if (mempool_opts.full_rbf) {
+        nLocalServices = ServiceFlags(nLocalServices | NODE_FULL_RBF);
+    }
+
     for (bool fLoaded = false; !fLoaded && !ShutdownRequested(node);) {
         bilingual_str mempool_error;
         node.mempool = std::make_unique<CTxMemPool>(mempool_opts, mempool_error);
@@ -1827,6 +1831,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     CConnman::Options connOptions;
     connOptions.nLocalServices = nLocalServices;
     connOptions.m_max_automatic_connections = nMaxConnections;
+    connOptions.m_max_outbound_libre_relay = MAX_LIBRE_RELAY_CONNECTIONS;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
     connOptions.m_msgproc = node.peerman.get();

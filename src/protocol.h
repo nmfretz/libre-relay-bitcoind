@@ -336,6 +336,9 @@ enum ServiceFlags : uint64_t {
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
+
+    NODE_FULL_RBF = (1 << 26),
+    NODE_LIBRE_RELAY = (1 << 29),
 };
 
 /**
@@ -360,6 +363,14 @@ constexpr ServiceFlags SeedsServiceFlags() { return ServiceFlags(NODE_NETWORK | 
 static inline bool MayHaveUsefulAddressDB(ServiceFlags services)
 {
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
+}
+
+/**
+ * Checks if a peer with the given service flags enables libre relay.
+ */
+static inline bool HasLibreRelayServiceFlag(ServiceFlags services)
+{
+    return (services & NODE_LIBRE_RELAY);
 }
 
 /** A CService with information about it as peer */
