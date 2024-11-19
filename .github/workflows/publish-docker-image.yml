@@ -1,10 +1,9 @@
 name: Docker CI
 on:
   push:
-    branches:
-      - libre-relay-v28.0
-env:
-  LATEST_TAG: 28.0
+    tags:
+      - 'libre-relay-v*'
+
 jobs:
   build:
     name: Build and push to GitHub Container Registry
@@ -13,6 +12,9 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Set VERSION
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        
       - uses: actions/checkout@v4
   
       - name: Login to GitHub Container Registry
@@ -25,14 +27,14 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg VERSION=${{ env.LATEST_TAG }} \
-            --tag ghcr.io/${{ github.repository }}:v${{ env.LATEST_TAG }} \
+            --build-arg VERSION=${{ env.VERSION }} \
+            --tag ghcr.io/${{ github.repository }}:${{ env.VERSION }} \
             --push .
 
       - name: Rebuild for latest tag
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg VERSION=${{ env.LATEST_TAG }} \
+            --build-arg VERSION=${{ env.VERSION }} \
             --tag ghcr.io/${{ github.repository }}:latest \
             --push .
