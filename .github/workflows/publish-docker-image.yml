@@ -1,0 +1,38 @@
+name: Docker CI
+on:
+  push:
+    branches:
+      - libre-relay-v28.0
+env:
+  LATEST_TAG: 28.0
+jobs:
+  build:
+    name: Build and push to GitHub Container Registry
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+  
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Setup Docker buildx
+        run: docker buildx create --use
+
+      - name: Run Docker buildx
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg VERSION=${{ env.LATEST_TAG }} \
+            --tag ghcr.io/${{ github.repository }}:v${{ env.LATEST_TAG }} \
+            --push .
+
+      - name: Rebuild for latest tag
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg VERSION=${{ env.LATEST_TAG }} \
+            --tag ghcr.io/${{ github.repository }}:latest \
+            --push .
